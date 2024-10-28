@@ -20,7 +20,8 @@ public class Main {
         System.setProperty("user.dir", initialPath);
 
         while (true) {
-            System.out.print(initialDir.getAbsolutePath() + " >> ");
+            // System.out.print(initialDir.getAbsolutePath() + " >> ");
+            System.out.print(System.getProperty("user.dir") + " >> ");
             String input = scanner.nextLine();
             String[] commandArgs = input.split("\\s+");
 

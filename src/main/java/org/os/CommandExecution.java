@@ -100,35 +100,37 @@ public class CommandExecution {
 
 
     public static void cd(String[] commandArgs) {
+        String initialPath = System.getProperty("user.dir"); 
+        
         if (commandArgs.length < 2) {
             System.out.println("Error: No path provided.");
             return;
         }
-    
+
         String path = commandArgs[1];
-    
-       
-        if ("..".equals(path)) {
-            Path parentPath = Paths.get(System.getProperty("user.dir")).getParent();
+
+        if ("/".equals(path)) {
+            System.setProperty("user.dir", initialPath);
+        } else if ("..".equals(path)) {
+            Path parentPath = Paths.get(initialPath).getParent();
             if (parentPath != null) {
                 System.setProperty("user.dir", parentPath.toAbsolutePath().toString());
-                System.out.println("Changed directory to: " + System.getProperty("user.dir"));
             } else {
                 System.out.println("Error: Already at the root directory.");
             }
-            return;
-        }
-    
-        Path newPath = Paths.get(System.getProperty("user.dir"), path).normalize();
-        File directory = newPath.toFile();
-    
-        if (directory.exists() && directory.isDirectory()) {
-            System.setProperty("user.dir", directory.getAbsolutePath());
-            System.out.println("Changed directory to: " + System.getProperty("user.dir"));
         } else {
-            System.out.println("Error: Directory does not exist.");
+        
+            Path newPath = Paths.get(initialPath, path).normalize();
+            File directory = newPath.toFile();
+
+            if (directory.exists() && directory.isDirectory()) {
+                System.setProperty("user.dir", directory.getAbsolutePath());
+            } else {
+                System.out.println("Error: Directory does not exist.");
+            }
         }
     }
+
 
     public static void mkdir(String[] commandArgs) {
         if (commandArgs.length < 2) {
@@ -199,7 +201,7 @@ public class CommandExecution {
         }
         return dir.delete();
     }
-  
+
 
 
 
@@ -307,6 +309,7 @@ public class CommandExecution {
                 case "rm":
                 rm(command);
                 break;
+
             default:
                 output.append("Unknown command: ").append(command[0]).append("\n");
         }
