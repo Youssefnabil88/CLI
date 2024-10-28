@@ -1,5 +1,7 @@
 package org.os;
 
+import com.sun.tools.jconsole.JConsoleContext;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,8 +36,7 @@ public class CommandExecution {
             case "mkdir":
                 mkdir(commandArgs);
                 break;
-
-                case "rm":
+            case "rm":
                 rm(commandArgs);
                 break;
             default:
@@ -104,27 +105,23 @@ public class CommandExecution {
             System.out.println("Error: No path provided.");
             return;
         }
-    
+
         String path = commandArgs[1];
-    
-       
         if ("..".equals(path)) {
             Path parentPath = Paths.get(System.getProperty("user.dir")).getParent();
             if (parentPath != null) {
                 System.setProperty("user.dir", parentPath.toAbsolutePath().toString());
-                System.out.println("Changed directory to: " + System.getProperty("user.dir"));
             } else {
                 System.out.println("Error: Already at the root directory.");
             }
             return;
         }
-    
+
         Path newPath = Paths.get(System.getProperty("user.dir"), path).normalize();
         File directory = newPath.toFile();
-    
+
         if (directory.exists() && directory.isDirectory()) {
             System.setProperty("user.dir", directory.getAbsolutePath());
-            System.out.println("Changed directory to: " + System.getProperty("user.dir"));
         } else {
             System.out.println("Error: Directory does not exist.");
         }
@@ -211,16 +208,16 @@ public class CommandExecution {
                 break;
             }
         }
-    
+
         if (pipeIndex == -1) {
             execute(commandArgs);
             return;
         }
-    
+
         String[] command1 = Arrays.copyOfRange(commandArgs, 0, pipeIndex);
         String[] command2 = Arrays.copyOfRange(commandArgs, pipeIndex + 1, commandArgs.length);
         String output = executeCommandAndGetOutput(command1);
-    
+
         if ("grep".equals(command2[0])) {
             String pattern = command2.length > 1 ? command2[1] : "";
             for (String line : output.split("\n")) {
@@ -236,7 +233,7 @@ public class CommandExecution {
             System.out.println("!Unknown command after pipe: " + command2[0]);
         }
     }
-    
+
     private static void paginateOutput(String output, int linesPerPage) {
         String[] lines = output.split("\n");
         for (int i = 0; i < lines.length; i++) {
@@ -247,35 +244,36 @@ public class CommandExecution {
             }
         }
     }
-    
+
     private static void paginateOutputWithScroll(String output) {
         String[] lines = output.split("\n");
         int currentLine = 0;
         Scanner scanner = new Scanner(System.in);
-    
+
         while (currentLine < lines.length) {
             for (int i = 0; i < 10 && currentLine < lines.length; i++, currentLine++) {
                 System.out.println(lines[currentLine]);
             }
-    
+
             if (currentLine < lines.length) {
                 System.out.println("Press 'f' to scroll down, 'b' to scroll up, or 'q' to quit...");
                 String input = scanner.nextLine().toLowerCase();
-    
+
                 if ("q".equals(input)) {
-                    break; 
+                    break;
                 } else if ("b".equals(input) && currentLine >= 20) {
                     currentLine -= 20;
                 } else if ("f".equals(input)) {
                     continue;
                 } else {
                     System.out.println("Invalid input, please use 'f', 'b', or 'q'.");
-                    currentLine -= 10; 
+                    currentLine -= 10;
                 }
             }
         }
     }
-    
+
+
 
 
 
@@ -299,9 +297,9 @@ public class CommandExecution {
                 case "cd":
                 cd(command);
                 break;
-    
+
             case "mkdir":
-                mkdir(command); 
+                mkdir(command);
                 break;
 
                 case "rm":
