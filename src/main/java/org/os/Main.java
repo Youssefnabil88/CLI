@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 public class Main {
     public static void main(String[] args) {
-        // Change the initial path to your preferred starting directory
         String initialPath = "/Users/dodoa/OneDrive/Desktop/OS"; 
         File initialDir = new File(initialPath);
 
@@ -61,7 +60,6 @@ public class Main {
                     CommandExecution.listDirectory();
                 }
             } else {
-                // Handle other commands
                 CommandExecution.execute(commandArgs);
             }
         } catch (Exception e) {

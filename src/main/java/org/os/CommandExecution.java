@@ -145,7 +145,6 @@ public class CommandExecution {
         }
     }
 
-    // Method to execute a command and return its output as a String
     public static String executeCommandAndGetOutput(String[] command) {
         StringBuilder output = new StringBuilder();
         switch (command[0]) {
