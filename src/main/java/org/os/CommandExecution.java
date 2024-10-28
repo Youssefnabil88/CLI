@@ -22,11 +22,21 @@ public class CommandExecution {
             case "touch":
                 touch(commandArgs);
                 break;
+            case "mv":
+                if (commandArgs.length < 3) {
+                    System.out.println("Error: 'mv' requires source and destination paths.");
+                } else {
+                    moveFile(commandArgs[1], commandArgs[2]);
+                }
+                break;
             case "exit":
                 System.out.println("Exiting CLI.");
                 System.exit(0);
+                break;
             case "help":
                 displayHelp();
+                break;
+            case "ls":
                 break;
             default:
                 System.out.println("Unknown command: " + commandArgs[0]);
@@ -36,7 +46,6 @@ public class CommandExecution {
     public static void listDirectoryWithHidden(String[] commandArgs) {
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         File directory = currentPath.toFile();
-
         if (directory.exists() && directory.isDirectory()) {
             File[] files = directory.listFiles();
             if (files != null && files.length > 0) {
@@ -51,10 +60,48 @@ public class CommandExecution {
         }
     }
 
+    public static void listDirectory() {
+        Path currentPath = Paths.get(System.getProperty("user.dir"));
+        File directory = currentPath.toFile();
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null && files.length > 0) {
+                for (File file : files) {
+                    System.out.println(file.getName());
+                }
+            } else {
+                System.out.println("The directory is empty.");
+            }
+        } else {
+            System.out.println("Error: No such directory: " + currentPath);
+        }
+    }
+
+    public static void listDirectoryRecursive() {
+        File currentDir = new File(System.getProperty("user.dir"));
+        listFilesRecursively(currentDir);
+    }
+
+    private static void listFilesRecursively(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                System.out.println(file.getAbsolutePath());
+                if (file.isDirectory()) {
+                    listFilesRecursively(file);
+                }
+            }
+        }
+    }
+
     private static void displayHelp() {
         System.out.println("Available commands:");
         System.out.println("  pwd           - Print the current working directory.");
-        System.out.println("  ls -a        - List the files in the current directory including hidden files.");
+        System.out.println("  ls            - List the files in the current directory.");
+        System.out.println("  ls -a        - List the files including hidden files.");
+        System.out.println("  ls -r        - List files recursively.");
+        System.out.println("  touch <filename> - Create a new file.");
+        System.out.println("  mv <source> <destination> - Move or rename a file.");
         System.out.println("  exit         - Exit the command line interface.");
         System.out.println("  help         - Display this help message.");
     }
@@ -77,6 +124,24 @@ public class CommandExecution {
             }
         } catch (IOException e) {
             System.out.println("Error creating file: " + e.getMessage());
+        }
+    }
+
+    public static void moveFile(String sourcePath, String destinationPath) {
+        File source = new File(System.getProperty("user.dir"), sourcePath);
+        File destination = new File(System.getProperty("user.dir"), destinationPath);
+
+        if (!source.exists()) {
+            System.out.println("Error: Source file does not exist.");
+            return;
+        }
+
+        if (source.renameTo(destination)) {
+            System.out.println("File moved successfully.");
+        }
+        
+        else {
+            System.out.println("Error: Could not move file.");
         }
     }
 
