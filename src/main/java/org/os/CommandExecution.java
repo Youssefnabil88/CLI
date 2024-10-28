@@ -1,14 +1,13 @@
 package org.os;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.nio.file.StandardCopyOption;
 
 public class CommandExecution {
-
     public static void execute(String[] commandArgs) {
         if (commandArgs.length == 0) {
             System.out.println("No command provided.");
@@ -16,30 +15,23 @@ public class CommandExecution {
         }
 
         switch (commandArgs[0]) {
-            case "pwd":
-                System.out.println(System.getProperty("user.dir"));
-                break;
-            case "touch":
-                touch(commandArgs);
-                break;
-            case "mv":
+            case "pwd" -> System.out.println(System.getProperty("user.dir"));
+            case "touch" -> touch(commandArgs);
+            case "mv" -> {
                 if (commandArgs.length < 3) {
                     System.out.println("Error: 'mv' requires source and destination paths.");
                 } else {
                     moveFile(commandArgs[1], commandArgs[2]);
                 }
-                break;
-            case "exit":
+            }
+            case "exit" -> {
                 System.out.println("Exiting CLI.");
                 System.exit(0);
-                break;
-            case "help":
-                displayHelp();
-                break;
-            case "ls":
-                break;
-            default:
-                System.out.println("Unknown command: " + commandArgs[0]);
+            }
+            case "help" -> displayHelp();
+            case "ls" -> {
+            }
+            default -> System.out.println("Unknown command: " + commandArgs[0]);
         }
     }
 
@@ -136,19 +128,26 @@ public class CommandExecution {
             return;
         }
 
+        if (destination.isDirectory()) {
+            destination = new File(destination, source.getName());
+        }
+
         if (source.renameTo(destination)) {
             System.out.println("File moved successfully.");
-        }
-        
-        else {
-            System.out.println("Error: Could not move file.");
+        } else {
+            try {
+                Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("File moved successfully.");
+            } catch (IOException e) {
+                System.out.println("Error: Could not move file due to I/O error.");
+            }
         }
     }
 
     public static String executeCommandAndGetOutput(String[] command) {
         StringBuilder output = new StringBuilder();
         switch (command[0]) {
-            case "ls":
+            case "ls" -> {
                 File currentDirectory = new File(System.getProperty("user.dir"));
                 File[] files = currentDirectory.listFiles();
                 if (files != null) {
@@ -156,12 +155,9 @@ public class CommandExecution {
                         output.append(file.getName()).append("\n");
                     }
                 }
-                break;
-            case "pwd":
-                output.append(System.getProperty("user.dir")).append("\n");
-                break;
-            default:
-                output.append("Unknown command: ").append(command[0]).append("\n");
+            }
+            case "pwd" -> output.append(System.getProperty("user.dir")).append("\n");
+            default -> output.append("Unknown command: ").append(command[0]).append("\n");
         }
         return output.toString();
     }
