@@ -1,13 +1,14 @@
 package org.os;
 
-import java.util.Scanner;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         //Do not forget to change the init PATH
-        String initialPath = "/home/youssef/Desktop";
+        String initialPath = "E:/os cli new-edition/CLI";
         File initialDir = new File(initialPath);
 
         if (!initialDir.exists() || !initialDir.isDirectory()) {
@@ -28,6 +29,9 @@ public class Main {
                     System.out.println("Exiting CLI...");
                     break;
                 }
+                else if (input.contains("|")) {
+                    CommandExecution.PipeCommand(commandArgs);}
+                    else
                 handleCommand(commandArgs);
             }
         }
@@ -45,12 +49,18 @@ public class Main {
                 return;
             }
 
-
+// if{}
             if ("ls".equals(commandArgs[0])) {
                 if (commandArgs.length > 1 && "-a".equals(commandArgs[1])) {
                     CommandExecution.listDirectoryWithHidden (commandArgs);
                 }
-            } else {
+
+            }   if (Arrays.asList(commandArgs).contains("|")) {
+                CommandExecution.PipeCommand(commandArgs);
+               return;
+            }
+            
+            else {
                 //pwd cd ls
                 // Handle other commands
                 CommandExecution.execute(commandArgs);
