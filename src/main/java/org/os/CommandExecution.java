@@ -1,28 +1,29 @@
 package org.os;
-
-import com.sun.tools.jconsole.JConsoleContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.io.FileWriter;
 
 public class CommandExecution {
 
-    public static void execute(String[] commandArgs) {
-        if (commandArgs.length == 0) {
+    public static void execute(String[] args) {
+        if (args.length == 0) {
             System.out.println("No command provided.");
             return;
         }
 
-        switch (commandArgs[0]) {
+        switch (args[0]) {
             case "pwd":
                 System.out.println(System.getProperty("user.dir"));
                 break;
             case "touch":
-                touch(commandArgs);
+                touch(args);
+                break;
+            case "ls":
+                ls(args);
                 break;
             case "exit":
                 System.out.println("Exiting CLI.");
@@ -30,17 +31,41 @@ public class CommandExecution {
             case "help":
                 displayHelp();
                 break;
-                case "cd":
-                cd(commandArgs);
+            case "cd":
+                cd(args);
                 break;
             case "mkdir":
-                mkdir(commandArgs);
+                mkdir(args);
+                break; 
+            case "rmdir":
+                rmdir(args);
+                break; 
+            case "cat":
+                cat(args);
                 break;
             case "rm":
-                rm(commandArgs);
+                rm(args);
                 break;
             default:
-                System.out.println("Unknown command: " + commandArgs[0]);
+                System.out.println("Unknown command: " + args[0]);
+        }
+    }
+
+                                    /* Youssef */
+
+    // Method to write output to a file, overwriting existing content (>)
+    public static void writeToFile(String[] command, String fileName) {
+        try {
+
+            File file = new File(System.getProperty("user.dir"), fileName);
+            try (FileWriter writer = new FileWriter(file)) {
+                String output = CommandExecution.executeCommandAndGetOutput(command);
+                writer.write(output);
+                writer.write(System.lineSeparator()); // Add a newline
+                System.out.println("Output written to " + fileName);
+            }
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
         }
     }
 
@@ -62,6 +87,150 @@ public class CommandExecution {
         }
     }
 
+    public static void touch(String[] commandArgs) {
+        if (commandArgs.length < 2) {
+            System.out.println("Error: No filename provided.");
+            return;
+        }
+
+        String filename = commandArgs[1];
+        Path filePath = Paths.get(System.getProperty("user.dir"), filename);
+        File file = filePath.toFile();
+        try {
+            if (file.createNewFile()) {
+                System.out.println("File created: " + file.getName());
+            } else {
+                System.out.println("Error: File already exists: " + file.getName());
+            }
+        } catch (IOException e) {
+            System.out.println("Error creating file: " + e.getMessage());
+        }
+    }
+
+    // Method to execute a command and return its output as a String
+    // Used in write to file & Pipe |
+    public static String executeCommandAndGetOutput(String[] command) {
+        
+        StringBuilder output = new StringBuilder();
+        switch (command[0]) {
+            case "ls":
+                File currentDirectory = new File(System.getProperty("user.dir"));
+                File[] files = currentDirectory.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        output.append(file.getName()).append("\n");
+                    }
+                }
+                break;
+            case "pwd":
+                output.append(System.getProperty("user.dir")).append("\n");
+                break;
+
+                case "cd":
+                cd(command);
+                break;
+
+            case "mkdir":
+                mkdir(command);
+                break;
+
+                case "rm":
+                rm(command);
+                break;
+            default:
+                output.append("Unknown command: ").append(command[0]).append("\n");
+        }
+        return output.toString();
+    }
+                                  
+
+    /*======================================================================================================= */
+    
+                                     /* Abdelrahman */
+    public static void ls(String[] commandArgs) {
+        Path currentPath = Paths.get(System.getProperty("user.dir"));
+        File directory = currentPath.toFile();
+
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null && files.length > 0) {
+                for (File file : files) {
+                    // Check if the file is not hidden
+                    if (!file.isHidden()) {
+                        System.out.println(file.getName());
+                    }
+                }
+            } else {
+                System.out.println("The directory is empty.");
+            }
+        } else {
+            System.out.println("Error: No such directory: " + currentPath);
+        }
+    }
+    
+    // Method to display the contents of a file
+    public static void cat(String[] commandArgs) {
+
+
+        if (commandArgs.length < 2) {
+            System.out.println("Error: No filename provided.");
+            return;
+        }
+
+        String filename = commandArgs[1];
+        File file = new File(System.getProperty("user.dir"), filename);
+
+        if (!file.exists()) {
+            System.out.println("Error: File does not exist.");
+            return;
+        }
+
+        if (!file.isFile()) {
+            System.out.println("Error: Specified path is not a file.");
+            return;
+        }
+
+        try (Scanner fileScanner = new Scanner(file)) {
+            while (fileScanner.hasNextLine()) {
+                System.out.println(fileScanner.nextLine());
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
+    } 
+
+    public static void rmdir(String[] commandArgs) {
+        if (commandArgs.length < 2) {
+            System.out.println("!No file or directory name provided.");
+            return;
+        }
+    
+        for (int i = 1; i < commandArgs.length; i++) {
+            String target = commandArgs[i];
+            File targetFile = new File(System.getProperty("user.dir"), target);
+    
+            if (!targetFile.exists()) {
+                System.out.println("!No such file or directory: " + target);
+                continue;
+            }
+    
+            if (targetFile.isDirectory()) {
+                // Check if the directory is empty
+                if (targetFile.list().length == 0) {
+                    if (targetFile.delete()) {
+                        System.out.println("Directory removed: " + target);
+                    } else {
+                        System.out.println("!Failed to remove directory (insufficient permissions): " + target);
+                    }
+                } else {
+                    System.out.println("!Directory is not empty: " + target);
+                }
+            } else {
+                System.out.println("!The specified target is not a directory: " + target);
+            }
+        }
+    }
+
     private static void displayHelp() {
         System.out.println("Available commands:");
         System.out.println("  pwd           - Print the current working directory.");
@@ -76,30 +245,10 @@ public class CommandExecution {
         System.out.println("  more              - View output one screen at a time (e.g., 'ls | more').");
         System.out.println("  less         - View output with scroll capability (e.g., 'ls | less').");
     }
-
-    public static void touch(String[] commandArgs) {
-        if (commandArgs.length < 2) {
-            System.out.println("Error: No filename provided.");
-            return;
-        }
-
-        String filename = commandArgs[1];
-        Path filePath = Paths.get(System.getProperty("user.dir"), filename);
-        File file = filePath.toFile();
-
-        try {
-            if (file.createNewFile()) {
-                System.out.println("File created: " + file.getName());
-            } else {
-                System.out.println("Error: File already exists: " + file.getName());
-            }
-        } catch (IOException e) {
-            System.out.println("Error creating file: " + e.getMessage());
-        }
-    }
+    /*======================================================================================================= */
 
 
-
+                                        /* Helana */
     public static void cd(String[] commandArgs) {
         if (commandArgs.length < 2) {
             System.out.println("Error: No path provided.");
@@ -150,8 +299,6 @@ public class CommandExecution {
         }
     }
     
-
-
     public static void rm(String[] commandArgs) {
         if (commandArgs.length < 2) {
             System.out.println("!No file or directory name provided.");
@@ -183,22 +330,6 @@ public class CommandExecution {
             }
         }
     }
-
-    public static boolean deleteDirectory(File dir) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    deleteDirectory(file);
-                }
-                file.delete();
-            }
-        }
-        return dir.delete();
-    }
-  
-
-
 
     public static void PipeCommand(String[] commandArgs) {
         int pipeIndex = -1;
@@ -273,41 +404,40 @@ public class CommandExecution {
         }
     }
 
-
-
-
-
-    // Method to execute a command and return its output as a String
-    public static String executeCommandAndGetOutput(String[] command) {
-        StringBuilder output = new StringBuilder();
-        switch (command[0]) {
-            case "ls":
-                File currentDirectory = new File(System.getProperty("user.dir"));
-                File[] files = currentDirectory.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        output.append(file.getName()).append("\n");
-                    }
+    //Helber fn Used in rm
+    public static boolean deleteDirectory(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
                 }
-                break;
-            case "pwd":
-                output.append(System.getProperty("user.dir")).append("\n");
-                break;
-
-                case "cd":
-                cd(command);
-                break;
-
-            case "mkdir":
-                mkdir(command);
-                break;
-
-                case "rm":
-                rm(command);
-                break;
-            default:
-                output.append("Unknown command: ").append(command[0]).append("\n");
+                file.delete();
+            }
         }
-        return output.toString();
+        return dir.delete();
     }
+  
+
+    /*======================================================================================================= */
+
+
+                                        /* Duaa */
+
+
+
+
+   
+
+
+
+   
+   
+
+   
+    
+    
+    
+
+
 }

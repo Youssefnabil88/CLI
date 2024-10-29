@@ -1,10 +1,8 @@
 package org.os;
-
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
+
 public class Main {
     public static void main(String[] args) {
         //Do not forget to change the init PATH
@@ -45,7 +43,7 @@ public class Main {
                 String[] outputCommand = new String[commandArgs.length - 2];
                 System.arraycopy(commandArgs, 0, outputCommand, 0, commandArgs.length - 2);
                 String fileName = commandArgs[commandArgs.length - 1];
-                writeToFile(outputCommand, fileName);
+                CommandExecution.writeToFile(outputCommand, fileName);
                 return;
             }
 
@@ -53,12 +51,17 @@ public class Main {
                 if (commandArgs.length > 1 && "-a".equals(commandArgs[1])) {
                     CommandExecution.listDirectoryWithHidden (commandArgs);
                 }
+                else if (commandArgs.length > 1 && "-r".equals(commandArgs[1])) {
+                    //Duaa 
+                }
+                else{
+                    CommandExecution.execute(commandArgs);
+                }
             }
             else if (Arrays.asList(commandArgs).contains("|")) {
                 CommandExecution.PipeCommand(commandArgs);
             }
             else {
-                //pwd cd ls
                 // Handle other commands
                 CommandExecution.execute(commandArgs);
             }
@@ -68,19 +71,4 @@ public class Main {
     }
 
 
-    // Method to write output to a file, overwriting existing content
-    public static void writeToFile(String[] command, String fileName) {
-        try {
-
-            File file = new File(System.getProperty("user.dir"), fileName);
-            try (FileWriter writer = new FileWriter(file)) {
-                String output = CommandExecution.executeCommandAndGetOutput(command);
-                writer.write(output);
-                writer.write(System.lineSeparator()); // Add a newline
-                System.out.println("Output written to " + fileName);
-            }
-        } catch (IOException e) {
-            System.out.println("Error writing to file: " + e.getMessage());
-        }
-    }
 }
