@@ -1,11 +1,11 @@
 package org.os;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.io.FileWriter;
 
 public class CommandExecution {
 
@@ -14,7 +14,7 @@ public class CommandExecution {
             System.out.println("No command provided.");
             return;
         }
-
+       
         switch (args[0]) {
             case "pwd":
                 System.out.println(System.getProperty("user.dir"));
@@ -137,6 +137,7 @@ public class CommandExecution {
                 case "rm":
                 rm(command);
                 break;
+               
             default:
                 output.append("Unknown command: ").append(command[0]).append("\n");
         }

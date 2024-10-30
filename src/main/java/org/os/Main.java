@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         //Do not forget to change the init PATH
-        String initialPath = "/home/youssef/Desktop";
+        String initialPath = "E:/cli testing/CLI";
         File initialDir = new File(initialPath);
 
         if (!initialDir.exists() || !initialDir.isDirectory()) {
@@ -61,6 +61,7 @@ public class Main {
             else if (Arrays.asList(commandArgs).contains("|")) {
                 CommandExecution.PipeCommand(commandArgs);
             }
+
             else {
                 // Handle other commands
                 CommandExecution.execute(commandArgs);
