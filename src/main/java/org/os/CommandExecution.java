@@ -8,6 +8,7 @@ import java.util.Scanner;
 import java.io.FileWriter;
 
 public class CommandExecution {
+    public static boolean isTestEnvironment = false; // Flag for testing environment
 
     public static void execute(String[] args) {
         if (args.length == 0) {
@@ -339,16 +340,16 @@ public class CommandExecution {
                 break;
             }
         }
-
+    
         if (pipeIndex == -1) {
             execute(commandArgs);
             return;
         }
-
+    
         String[] command1 = Arrays.copyOfRange(commandArgs, 0, pipeIndex);
         String[] command2 = Arrays.copyOfRange(commandArgs, pipeIndex + 1, commandArgs.length);
         String output = executeCommandAndGetOutput(command1);
-
+    
         if ("grep".equals(command2[0])) {
             String pattern = command2.length > 1 ? command2[1] : "";
             for (String line : output.split("\n")) {
@@ -357,13 +358,66 @@ public class CommandExecution {
                 }
             }
         } else if ("more".equals(command2[0])) {
-            paginateOutput(output, 10);
+            // Simulate more output for testing purposes
+            if (isTestEnvironment) {
+                simulateMoreOutput(output);
+            } else {
+                paginateOutput(output, 10);
+            }
         } else if ("less".equals(command2[0])) {
-            paginateOutputWithScroll(output);
+            if (isTestEnvironment) {
+             testPaginateOutputWithScroll(output);
+            }
+            else
+                paginateOutputWithScroll(output);
         } else {
             System.out.println("!Unknown command after pipe: " + command2[0]);
         }
     }
+    
+    // New method to simulate the behavior of more
+    private static void simulateMoreOutput(String output) {
+        String[] lines = output.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            System.out.println(lines[i]);
+            // Simulate "Press Enter to continue..." after every 10 lines
+            if ((i + 1) % 10 == 0) {
+                System.out.println("Press Enter to continue...");
+                // Here you can add a break if testing or a wait mechanism in real usage
+            }
+        }
+    }
+
+   
+    private static void testPaginateOutputWithScroll(String output) {
+        String[] lines = output.split("\n");
+        int currentLine = 0;
+        int totalLines = lines.length;
+        int scrollDownSteps = 0; // Number of times to scroll down (for simulation)
+    
+        while (currentLine < totalLines) {
+            // Print the next 10 lines or remaining lines
+            for (int i = 0; i < 10 && currentLine < totalLines; i++, currentLine++) {
+                System.out.println(lines[currentLine]);
+            }
+    
+            // Check if there are more lines to display
+            if (currentLine < totalLines) {
+                // Simulate user input for scrolling behavior
+                if (scrollDownSteps < 3) { // Simulating pressing 'f' three times
+                    System.out.println("Simulated input: 'f' (scroll down)");
+                    scrollDownSteps++;
+                } else {
+                    // You can simulate pressing 'q' to quit for the sake of testing
+                    System.out.println("Simulated input: 'q' (quit)");
+                    break; // Exit the loop to stop the simulation
+                }
+            }
+        }
+    }
+     
+    
+    
 
     private static void paginateOutput(String output, int linesPerPage) {
         String[] lines = output.split("\n");

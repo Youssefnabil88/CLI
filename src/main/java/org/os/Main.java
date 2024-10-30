@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         //Do not forget to change the init PATH
-        String initialPath = "/home/youssef/Desktop";
+        String initialPath = "/home/youssef";
         File initialDir = new File(initialPath);
 
         if (!initialDir.exists() || !initialDir.isDirectory()) {
