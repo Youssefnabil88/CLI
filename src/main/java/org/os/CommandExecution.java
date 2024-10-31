@@ -43,16 +43,20 @@ public class CommandExecution {
                 mkdir(args);
                 break; 
             case "rmdir":
-                rmdir(args);
-                break; 
+            rmdir(args);
+            break;
+                case "echo":
+            handleEchoWithRedirection(args);
+            break; 
             case "cat":
                 cat(args);
                 break;
                 case "rm":
                 rm(args);
                 break;
-                case "mv":
-                // mv(args);
+            case "mv":
+            System.out.println("mv will work");
+                moveFile(args[1], args[2]);
                 break;
             default:
                 System.out.println("Unknown command: " + args[0]);
@@ -142,9 +146,9 @@ public class CommandExecution {
                 mkdir(command);
                 break;
 
-                case "rm":
-                rm(command);
-                break;
+            case "rm":
+            rm(command);
+            break;
                 case "mv":
                //  mv(command);
                 break;
@@ -153,7 +157,7 @@ public class CommandExecution {
         }
         return output.toString();
     }
-                                  
+
 
     /*======================================================================================================= */
     
@@ -496,8 +500,6 @@ public class CommandExecution {
                                         /* Duaa */
 
 
-
-
     public static void moveFile(String sourcePath, String destinationPath) {
         File source = new File(System.getProperty("user.dir"), sourcePath);
         File destination = new File(System.getProperty("user.dir"), destinationPath);
@@ -506,20 +508,48 @@ public class CommandExecution {
             System.out.println("Error: Source file does not exist.");
             return;
         }
-
+    
+       
         if (destination.isDirectory()) {
             destination = new File(destination, source.getName());
         }
-
-        if (source.renameTo(destination)) {
-            System.out.println("File renamed successfully.");
-        } else {
-            try {
-                Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    
+        try {
+            Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            
+            if (!source.getParentFile().equals(destination.getParentFile())) {
                 System.out.println("File moved successfully.");
-            } catch (IOException e) {
-                System.out.println("Error: Could not move file due to I/O error.");
+            } else {
+                System.out.println("File renamed successfully.");
             }
+        } catch (IOException e) {
+            System.out.println("Error: Could not move file due to I/O error.");
+        }
+    }
+    
+
+    public static void handleEchoWithRedirection(String[] commandArgs) {
+        StringBuilder contentToWrite = new StringBuilder();
+        boolean append = false;
+        String fileName = null;
+    
+        for (int i = 1; i < commandArgs.length; i++) {
+            if (">".equals(commandArgs[i]) && i + 1 < commandArgs.length) {
+                fileName = commandArgs[i + 1];
+                append = false; // Overwrite mode
+                break;
+            } else if (">>".equals(commandArgs[i]) && i + 1 < commandArgs.length) {
+                fileName = commandArgs[i + 1];
+                append = true; // Append mode
+                break;
+            }
+            contentToWrite.append(commandArgs[i].isEmpty() ? "\n" : commandArgs[i] + " ");
+        }
+    
+        if (fileName != null) {
+            writeToFile(contentToWrite.toString().trim(), fileName, append);
+        } else {
+            System.out.println("Error: Redirection operator not followed by filename.");
         }
     }
 
@@ -532,15 +562,4 @@ public class CommandExecution {
             System.out.println("Error writing to file: " + e.getMessage());
         }
     }
-                                        
-
-    
-   
-
-   
-    
-    
-    
-
-
 }

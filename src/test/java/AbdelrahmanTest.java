@@ -78,27 +78,27 @@ class AbdelrahmanTest {
         String output = outputStreamCaptor.toString().trim();
         assertEquals("!No such file or directory: nonExistentDir", output);
     }
-    // اختبار cat
+    
     @Test
     void testCatFile() {
         String[] commandArgs = {"cat", TEST_FILE_NAME};
         CommandExecution.cat(commandArgs);
         String output = outputStreamCaptor.toString().trim();
-        assertEquals("Hello, World!", output); // تحقق من محتويات الملف
+        assertEquals("Hello, World!", output);  
     }
     @Test
     void testCatNonExistentFile() {
         String[] commandArgs = {"cat", "nonExistentFile.txt"};
         CommandExecution.cat(commandArgs);
         String output = outputStreamCaptor.toString().trim();
-        assertEquals("Error: File does not exist.", output); // تحقق من الرسالة
+        assertEquals("Error: File does not exist.", output); 
     }
-    // اختبار ls
+    
     @Test
     void testLs() {
         String[] commandArgs = {"ls"};
         CommandExecution.ls(commandArgs);
         String output = outputStreamCaptor.toString().trim();
-        assertEquals(TEST_DIR_NAME + "\n" + EXISTING_DIR_NAME, output); // تحقق من ظهور أسماء المجلدات
+        assertEquals(TEST_DIR_NAME + "\n" + EXISTING_DIR_NAME, output); 
     }
 }

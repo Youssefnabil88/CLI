@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         //Do not forget to change the init PATH
-        String initialPath = "/home/youssef";
+        String initialPath = "/home/youssef/Desktop";
         File initialDir = new File(initialPath);
 
         if (!initialDir.exists() || !initialDir.isDirectory()) {
@@ -46,7 +46,7 @@ public class Main {
                 CommandExecution.writeToFile(outputCommand, fileName);
                 return;
             }
-
+            
             if ("ls".equals(commandArgs[0])) {
                 if (commandArgs.length > 1 && "-a".equals(commandArgs[1])) {
                     CommandExecution.listDirectoryWithHidden (commandArgs);
