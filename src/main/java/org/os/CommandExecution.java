@@ -1,9 +1,13 @@
 package org.os;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
 import java.io.FileWriter;
 
@@ -44,8 +48,11 @@ public class CommandExecution {
             case "cat":
                 cat(args);
                 break;
-            case "rm":
+                case "rm":
                 rm(args);
+                break;
+                case "mv":
+                // mv(args);
                 break;
             default:
                 System.out.println("Unknown command: " + args[0]);
@@ -138,6 +145,9 @@ public class CommandExecution {
                 case "rm":
                 rm(command);
                 break;
+                case "mv":
+               //  mv(command);
+                break;
             default:
                 output.append("Unknown command: ").append(command[0]).append("\n");
         }
@@ -149,25 +159,32 @@ public class CommandExecution {
     
                                      /* Abdelrahman */
     public static void ls(String[] commandArgs) {
-        Path currentPath = Paths.get(System.getProperty("user.dir"));
-        File directory = currentPath.toFile();
+    Path currentPath = Paths.get(System.getProperty("user.dir"));
+    File directory = currentPath.toFile();
 
-        if (directory.exists() && directory.isDirectory()) {
-            File[] files = directory.listFiles();
-            if (files != null && files.length > 0) {
-                for (File file : files) {
-                    // Check if the file is not hidden
-                    if (!file.isHidden()) {
-                        System.out.println(file.getName());
-                    }
-                }
+    if (directory.exists() && directory.isDirectory()) {
+        File[] files = directory.listFiles();
+        if (files != null && files.length > 0) {
+            // Reverse listing if "-r" argument is provided
+            if (commandArgs.length > 1 && "-r".equals(commandArgs[1])) {
+                Arrays.sort(files, (a, b) -> b.getName().compareTo(a.getName()));
             } else {
-                System.out.println("The directory is empty.");
+                Arrays.sort(files, (a, b) -> a.getName().compareTo(b.getName()));
+            }
+
+            for (File file : files) {
+                if (!file.isHidden()) {
+                    System.out.println(file.getName());
+                }
             }
         } else {
-            System.out.println("Error: No such directory: " + currentPath);
+            System.out.println("The directory is empty.");
         }
+    } else {
+        System.out.println("Error: No such directory: " + currentPath);
     }
+}
+                                    
     
     // Method to display the contents of a file
     public static void cat(String[] commandArgs) {
@@ -481,11 +498,43 @@ public class CommandExecution {
 
 
 
-   
+    public static void moveFile(String sourcePath, String destinationPath) {
+        File source = new File(System.getProperty("user.dir"), sourcePath);
+        File destination = new File(System.getProperty("user.dir"), destinationPath);
 
+        if (!source.exists()) {
+            System.out.println("Error: Source file does not exist.");
+            return;
+        }
 
+        if (destination.isDirectory()) {
+            destination = new File(destination, source.getName());
+        }
 
-   
+        if (source.renameTo(destination)) {
+            System.out.println("File renamed successfully.");
+        } else {
+            try {
+                Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("File moved successfully.");
+            } catch (IOException e) {
+                System.out.println("Error: Could not move file due to I/O error.");
+            }
+        }
+    }
+
+    public static void writeToFile(String content, String fileName, boolean append) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, append))) {
+            writer.write(content);
+            writer.newLine(); // Add a newline 
+            System.out.println("Output " + (append ? "appended to" : "written to") + " " + fileName);
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+                                        
+
+    
    
 
    

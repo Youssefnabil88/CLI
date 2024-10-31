@@ -52,7 +52,7 @@ public class Main {
                     CommandExecution.listDirectoryWithHidden (commandArgs);
                 }
                 else if (commandArgs.length > 1 && "-r".equals(commandArgs[1])) {
-                    //Duaa 
+                    CommandExecution.ls(commandArgs);
                 }
                 else{
                     CommandExecution.execute(commandArgs);
