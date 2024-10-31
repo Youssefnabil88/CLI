@@ -12,7 +12,7 @@ import java.util.Scanner;
 import java.io.FileWriter;
 
 public class CommandExecution {
-    public static boolean isTestEnvironment = false; // Flag for testing environment
+    public static boolean isTestEnvironment = false; // Flag for testing env.
 
     public static void execute(String[] args) {
         if (args.length == 0) {
@@ -43,19 +43,18 @@ public class CommandExecution {
                 mkdir(args);
                 break; 
             case "rmdir":
-            rmdir(args);
+                rmdir(args);
             break;
-                case "echo":
-            handleEchoWithRedirection(args);
+            case "echo":
+                 handleEchoWithRedirection(args);
             break; 
             case "cat":
                 cat(args);
                 break;
-                case "rm":
+            case "rm":
                 rm(args);
                 break;
             case "mv":
-            System.out.println("mv will work");
                 moveFile(args[1], args[2]);
                 break;
             default:
@@ -162,6 +161,8 @@ public class CommandExecution {
     /*======================================================================================================= */
     
                                      /* Abdelrahman */
+
+    //Duaa Added ls -r functionality to this function.
     public static void ls(String[] commandArgs) {
     Path currentPath = Paths.get(System.getProperty("user.dir"));
     File directory = currentPath.toFile();
@@ -255,17 +256,19 @@ public class CommandExecution {
 
     private static void displayHelp() {
         System.out.println("Available commands:");
-        System.out.println("  pwd           - Print the current working directory.");
-        System.out.println("  ls -a        - List the files in the current directory including hidden files.");
-        System.out.println("  exit         - Exit the command line interface.");
-        System.out.println("  help         - Display this help message.");
-        System.out.println("  cd <path>     - Change the current directory to <path>.");
-        System.out.println("  mkdir <name>  - Create a new directory with the specified <name>.");
-        System.out.println("  rm <name>  - Remove directory OR File with the specified <name>.");
+        System.out.println("  pwd               - Print the current working directory.");
+        System.out.println("  ls -a             - List the files in the current directory including hidden files.");
+        System.out.println("  ls -r             - List the files in the current directory in reverse way.");        
+        System.out.println("  exit              - Exit the command line interface.");
+        System.out.println("  help              - Display this help message.");
+        System.out.println("  cd <path>         - Change the current directory to <path>.");
+        System.out.println("  mkdir <name>      - Create a new directory with the specified <name>.");
+        System.out.println("  rm <name>         - Remove directory OR File with the specified <name>.");
+        System.out.println("  mv <source file/s> <destination>     - move one or more files to destination directory.");
         System.out.println("  grep <pattern>    - Search for lines containing <pattern> from input.");
         System.out.println("  |                 - Pipe the output of one command to another (e.g., 'ls | grep txt').");
         System.out.println("  more              - View output one screen at a time (e.g., 'ls | more').");
-        System.out.println("  less         - View output with scroll capability (e.g., 'ls | less').");
+        System.out.println("  less              - View output with scroll capability (e.g., 'ls | less').");
     }
     /*======================================================================================================= */
 
@@ -395,7 +398,6 @@ public class CommandExecution {
             System.out.println("!Unknown command after pipe: " + command2[0]);
         }
     }
-    
     // New method to simulate the behavior of more
     private static void simulateMoreOutput(String output) {
         String[] lines = output.split("\n");
@@ -409,7 +411,6 @@ public class CommandExecution {
         }
     }
 
-   
     private static void testPaginateOutputWithScroll(String output) {
         String[] lines = output.split("\n");
         int currentLine = 0;
@@ -436,9 +437,6 @@ public class CommandExecution {
             }
         }
     }
-     
-    
-    
 
     private static void paginateOutput(String output, int linesPerPage) {
         String[] lines = output.split("\n");
@@ -495,10 +493,8 @@ public class CommandExecution {
   
 
     /*======================================================================================================= */
-
-
+    
                                         /* Duaa */
-
 
     public static void moveFile(String sourcePath, String destinationPath) {
         File source = new File(System.getProperty("user.dir"), sourcePath);
@@ -527,7 +523,6 @@ public class CommandExecution {
         }
     }
     
-
     public static void handleEchoWithRedirection(String[] commandArgs) {
         StringBuilder contentToWrite = new StringBuilder();
         boolean append = false;
@@ -553,11 +548,16 @@ public class CommandExecution {
         }
     }
 
+    //Over ride WriteToFile fn() to match >> (append operation).
     public static void writeToFile(String content, String fileName, boolean append) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, append))) {
-            writer.write(content);
-            writer.newLine(); // Add a newline 
-            System.out.println("Output " + (append ? "appended to" : "written to") + " " + fileName);
+        try {
+            File file = new File(System.getProperty("user.dir"), fileName);
+            
+            try (FileWriter writer = new FileWriter(file, append)) {
+                writer.write(content);
+                writer.write(System.lineSeparator()); // Add a newline at the end of the content
+                System.out.println("Output written to " + fileName + (append ? " (appended)" : " (overwritten)"));
+            }
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
         }

@@ -46,7 +46,7 @@ public class Main {
                 CommandExecution.writeToFile(outputCommand, fileName);
                 return;
             }
-            
+
             if ("ls".equals(commandArgs[0])) {
                 if (commandArgs.length > 1 && "-a".equals(commandArgs[1])) {
                     CommandExecution.listDirectoryWithHidden (commandArgs);
