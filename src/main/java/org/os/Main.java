@@ -39,6 +39,7 @@ public class Main {
     private static void handleCommand(String[] commandArgs) {
         try {
             // Check for output redirection with >
+
             if (commandArgs.length > 2 && ">".equals(commandArgs[commandArgs.length - 2])) {
                 String[] outputCommand = new String[commandArgs.length - 2];
                 System.arraycopy(commandArgs, 0, outputCommand, 0, commandArgs.length - 2);

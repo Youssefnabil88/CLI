@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 import java.io.FileWriter;
 
@@ -54,9 +55,16 @@ public class CommandExecution {
             case "rm":
                 rm(args);
                 break;
-            case "mv":
-                moveFile(args[1], args[2]);
+                case "mv":
+                if (args.length < 3) {
+                    System.out.println("Error: At least a source and destination path are required.");
+                } else {
+                    // Convert the args array to a list, starting from index 1 to include paths only
+                    List<String> paths = Arrays.asList(args);
+                    moveFiles(paths, false);
+                }
                 break;
+            
             default:
                 System.out.println("Unknown command: " + args[0]);
         }
@@ -100,21 +108,24 @@ public class CommandExecution {
 
     public static void touch(String[] commandArgs) {
         if (commandArgs.length < 2) {
-            System.out.println("Error: No filename provided.");
+            System.out.println("Error: No filenames provided.");
             return;
         }
-
-        String filename = commandArgs[1];
-        Path filePath = Paths.get(System.getProperty("user.dir"), filename);
-        File file = filePath.toFile();
-        try {
-            if (file.createNewFile()) {
-                System.out.println("File created: " + file.getName());
-            } else {
-                System.out.println("Error: File already exists: " + file.getName());
+    
+        for (int i = 1; i < commandArgs.length; i++) {
+            String filename = commandArgs[i];
+            Path filePath = Paths.get(System.getProperty("user.dir"), filename);
+            File file = filePath.toFile();
+    
+            try {
+                if (file.createNewFile()) {
+                    System.out.println("File created: " + file.getName());
+                } else {
+                    System.out.println("File already exists: " + file.getName());
+                }
+            } catch (IOException e) {
+                System.out.println("Error creating file: " + e.getMessage() + " for " + filename);
             }
-        } catch (IOException e) {
-            System.out.println("Error creating file: " + e.getMessage());
         }
     }
 
@@ -148,9 +159,12 @@ public class CommandExecution {
             case "rm":
             rm(command);
             break;
-                case "mv":
-               //  mv(command);
-                break;
+            case "mv":
+            //  mv(command);
+             break;
+             case "echo":
+             handleEchoWithRedirection(command);
+              break;
             default:
                 output.append("Unknown command: ").append(command[0]).append("\n");
         }
@@ -496,33 +510,73 @@ public class CommandExecution {
     
                                         /* Duaa */
 
-    public static void moveFile(String sourcePath, String destinationPath) {
-        File source = new File(System.getProperty("user.dir"), sourcePath);
-        File destination = new File(System.getProperty("user.dir"), destinationPath);
-
-        if (!source.exists()) {
-            System.out.println("Error: Source file does not exist.");
+    public static void moveFiles(List<String> paths, boolean force) {
+        if (paths.size() < 2) {
+            System.out.println("Error: At least a source and destination path are required.");
             return;
         }
-    
-       
-        if (destination.isDirectory()) {
-            destination = new File(destination, source.getName());
-        }
-    
-        try {
-            Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            
-            if (!source.getParentFile().equals(destination.getParentFile())) {
-                System.out.println("File moved successfully.");
-            } else {
-                System.out.println("File renamed successfully.");
+
+        String lastPath = paths.get(paths.size() - 1);
+        File destination = new File(System.getProperty("user.dir"), lastPath);
+
+        if (paths.size() == 2 && !destination.isDirectory()) {
+            File source = new File(System.getProperty("user.dir"), paths.get(0));
+
+
+            if (destination.exists() && !destination.canWrite() && !force && System.console() != null) {
+                System.out.print("Overwrite " + destination.getName() + "? (y/N): ");
+                Scanner scanner = new Scanner(System.in);
+                String response = scanner.nextLine();
+                if (!response.toLowerCase().startsWith("y")) {
+                    System.out.println("Skipped: " + source.getName());
+                    return;
+                }
             }
-        } catch (IOException e) {
-            System.out.println("Error: Could not move file due to I/O error.");
+
+            if (source.renameTo(destination)) {
+                System.out.println("File renamed successfully to " + destination.getPath());
+            } else {
+                System.out.println("Error: Could not rename file.");
+            }
+            return;
+        }
+
+        if (paths.size() > 2 && !destination.isDirectory()) {
+            System.out.println("Error: When moving multiple files, the destination must be a directory.");
+            return;
+        }
+
+        for (int i = 1; i < paths.size() - 1; i++) {
+            File source = new File(System.getProperty("user.dir"), paths.get(i));
+            
+            if (!source.exists()) {
+                System.out.println("Error: Source file does not exist - " + source.getPath());
+                continue;
+            }
+
+            File targetDestination = destination.isDirectory() ? new File(destination, source.getName()) : destination;
+
+            if (targetDestination.exists() && !targetDestination.canWrite() && !force && System.console() != null) {
+                System.out.print("Overwrite " + targetDestination.getName() + "? (y/N): ");
+                Scanner scanner = new Scanner(System.in);
+                String response = scanner.nextLine();
+                if (!response.toLowerCase().startsWith("y")) {
+                    System.out.println("Skipped: " + source.getName());
+                    continue;
+                }
+            }
+
+            try {
+                Files.move(source.toPath(), targetDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("File moved: " + source.getName() + " to " + targetDestination.getPath());
+            } catch (IOException e) {
+                System.out.println("Error: Could not move file " + source.getPath() + " due to I/O error.");
+            }
         }
     }
     
+
+
     public static void handleEchoWithRedirection(String[] commandArgs) {
         StringBuilder contentToWrite = new StringBuilder();
         boolean append = false;
@@ -531,19 +585,21 @@ public class CommandExecution {
         for (int i = 1; i < commandArgs.length; i++) {
             if (">".equals(commandArgs[i]) && i + 1 < commandArgs.length) {
                 fileName = commandArgs[i + 1];
-                append = false; // Overwrite mode
+                append = false; // Overwrite mode;
                 break;
             } else if (">>".equals(commandArgs[i]) && i + 1 < commandArgs.length) {
                 fileName = commandArgs[i + 1];
                 append = true; // Append mode
                 break;
             }
+    
             contentToWrite.append(commandArgs[i].isEmpty() ? "\n" : commandArgs[i] + " ");
         }
     
         if (fileName != null) {
             writeToFile(contentToWrite.toString().trim(), fileName, append);
         } else {
+        
             System.out.println("Error: Redirection operator not followed by filename.");
         }
     }
