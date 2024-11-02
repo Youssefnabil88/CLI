@@ -32,7 +32,7 @@ public class MoveFileTest {
     public void testMoveFileSuccessful() throws IOException {
         Files.writeString(Paths.get(SOURCE_PATH), "some content");
 
-        CommandExecution.moveFile(SOURCE_PATH, DESTINATION_PATH);
+        CommandExecution.moveFiles(SOURCE_PATH, DESTINATION_PATH);
         
         if(Paths.get(DESTINATION_PATH)!=null)//mean that the destinationPath is a directory then should move the source file into the destination, then the sourcePath should be still there
             assertTrue(Files.exists(Paths.get(SOURCE_PATH)), "Source file should exist after moveing it into the destination path.");

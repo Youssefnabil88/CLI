@@ -73,20 +73,16 @@ public class CommandExecution {
                                     /* Youssef */
 
     // Method to write output to a file, overwriting existing content (>)
-    public static void writeToFile(String[] command, String fileName) {
-        try {
-
-            File file = new File(System.getProperty("user.dir"), fileName);
-            try (FileWriter writer = new FileWriter(file)) {
-                String output = CommandExecution.executeCommandAndGetOutput(command);
-                writer.write(output);
-                writer.write(System.lineSeparator()); // Add a newline
-                System.out.println("Output written to " + fileName);
-            }
+    public static void writeToFile(String content, String fileName) {
+        File file = new File(System.getProperty("user.dir"), fileName);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(content);
+            System.out.println("Output written to " + fileName);
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
         }
     }
+    
 
     public static void listDirectoryWithHidden(String[] commandArgs) {
         Path currentPath = Paths.get(System.getProperty("user.dir"));
@@ -165,6 +161,9 @@ public class CommandExecution {
              case "echo":
              handleEchoWithRedirection(command);
               break;
+              case "cat":
+              handleEchoWithRedirection(command);
+               break;
             default:
                 output.append("Unknown command: ").append(command[0]).append("\n");
         }
@@ -205,36 +204,55 @@ public class CommandExecution {
 }
                                     
     
-    // Method to display the contents of a file
-    public static void cat(String[] commandArgs) {
+public static void cat(String[] commandArgs) {
+    // Check if we are writing user input to a file
+    if (commandArgs.length == 3 && ">".equals(commandArgs[1])) {
+        String fileName = commandArgs[2];
+        File file = new File(System.getProperty("user.dir"), fileName);
 
+        try (FileWriter writer = new FileWriter(file)) {
+            System.out.println("Enter text (press Ctrl+D to end):");
 
-        if (commandArgs.length < 2) {
-            System.out.println("Error: No filename provided.");
-            return;
-        }
-
-        String filename = commandArgs[1];
-        File file = new File(System.getProperty("user.dir"), filename);
-
-        if (!file.exists()) {
-            System.out.println("Error: File does not exist.");
-            return;
-        }
-
-        if (!file.isFile()) {
-            System.out.println("Error: Specified path is not a file.");
-            return;
-        }
-
-        try (Scanner fileScanner = new Scanner(file)) {
-            while (fileScanner.hasNextLine()) {
-                System.out.println(fileScanner.nextLine());
+            Scanner scanner = new Scanner(System.in);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                writer.write(line + System.lineSeparator());
             }
+            System.out.println("Input written to " + fileName);
         } catch (IOException e) {
-            System.out.println("Error reading file: " + e.getMessage());
+            System.out.println("Error writing to file: " + e.getMessage());
         }
-    } 
+        return;
+    }
+
+    // Otherwise, continue with regular file reading functionality
+    if (commandArgs.length < 2) {
+        System.out.println("Error: No filename provided.");
+        return;
+    }
+
+    String filename = commandArgs[1];
+    File file = new File(System.getProperty("user.dir"), filename);
+
+    if (!file.exists()) {
+        System.out.println("Error: File does not exist.");
+        return;
+    }
+
+    if (!file.isFile()) {
+        System.out.println("Error: Specified path is not a file.");
+        return;
+    }
+
+    try (Scanner fileScanner = new Scanner(file)) {
+        while (fileScanner.hasNextLine()) {
+            System.out.println(fileScanner.nextLine());
+        }
+    } catch (IOException e) {
+        System.out.println("Error reading file: " + e.getMessage());
+    }
+}
+
 
     public static void rmdir(String[] commandArgs) {
         if (commandArgs.length < 2) {
@@ -515,14 +533,26 @@ public class CommandExecution {
             System.out.println("Error: At least a source and destination path are required.");
             return;
         }
-
+    
         String lastPath = paths.get(paths.size() - 1);
         File destination = new File(System.getProperty("user.dir"), lastPath);
-
-        if (paths.size() == 2 && !destination.isDirectory()) {
+    
+        if (paths.size() == 2) {
             File source = new File(System.getProperty("user.dir"), paths.get(0));
-
-
+    
+            if (!source.exists()) {
+                System.out.println("Error: Source does not exist.");
+                return;
+            }
+    
+            if (source.isFile() && destination.isDirectory()) {
+                System.out.println("Error: Destination cannot be a directory when moving a single file.");
+                return;
+            } else if (source.isDirectory() && !destination.isDirectory()) {
+                System.out.println("Error: Destination must be a directory when moving a directory.");
+                return;
+            }
+    
             if (destination.exists() && !destination.canWrite() && !force && System.console() != null) {
                 System.out.print("Overwrite " + destination.getName() + "? (y/N): ");
                 Scanner scanner = new Scanner(System.in);
@@ -532,30 +562,31 @@ public class CommandExecution {
                     return;
                 }
             }
-
-            if (source.renameTo(destination)) {
-                System.out.println("File renamed successfully to " + destination.getPath());
-            } else {
-                System.out.println("Error: Could not rename file.");
+    
+            try {
+                Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("Moved successfully to " + destination.getPath());
+            } catch (IOException e) {
+                System.out.println("Error: Could not move " + source.getName() + " due to I/O error.");
             }
             return;
         }
-
+    
         if (paths.size() > 2 && !destination.isDirectory()) {
             System.out.println("Error: When moving multiple files, the destination must be a directory.");
             return;
         }
-
+    
         for (int i = 1; i < paths.size() - 1; i++) {
             File source = new File(System.getProperty("user.dir"), paths.get(i));
-            
+    
             if (!source.exists()) {
-                System.out.println("Error: Source file does not exist - " + source.getPath());
+                System.out.println("Error: Source does not exist - ");
                 continue;
             }
-
-            File targetDestination = destination.isDirectory() ? new File(destination, source.getName()) : destination;
-
+    
+            File targetDestination = new File(destination, source.getName());
+    
             if (targetDestination.exists() && !targetDestination.canWrite() && !force && System.console() != null) {
                 System.out.print("Overwrite " + targetDestination.getName() + "? (y/N): ");
                 Scanner scanner = new Scanner(System.in);
@@ -565,12 +596,12 @@ public class CommandExecution {
                     continue;
                 }
             }
-
+    
             try {
                 Files.move(source.toPath(), targetDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("File moved: " + source.getName() + " to " + targetDestination.getPath());
+                System.out.println("Moved: " + source.getName() + " to " + targetDestination.getPath());
             } catch (IOException e) {
-                System.out.println("Error: Could not move file " + source.getPath() + " due to I/O error.");
+                System.out.println("Error: Could not move " + source.getPath() + " due to I/O error.");
             }
         }
     }
