@@ -205,27 +205,38 @@ public class CommandExecution {
                                     
     
 public static void cat(String[] commandArgs) {
-    // Check if we are writing user input to a file
-    if (commandArgs.length == 3 && ">".equals(commandArgs[1])) {
-        String fileName = commandArgs[2];
-        File file = new File(System.getProperty("user.dir"), fileName);
+    // Check for redirecting output to a file
+    if (commandArgs.length == 4 && ">".equals(commandArgs[2])) {
+        String inputFileName = commandArgs[1]; // The file to read from
+        String outputFileName = commandArgs[3]; // The file to write to
+        File inputFile = new File(System.getProperty("user.dir"), inputFileName);
+        File outputFile = new File(System.getProperty("user.dir"), outputFileName);
 
-        try (FileWriter writer = new FileWriter(file)) {
-            System.out.println("Enter text (press Ctrl+D to end):");
+        if (!inputFile.exists()) {
+            System.out.println("Error: Input file does not exist.");
+            return;
+        }
 
-            Scanner scanner = new Scanner(System.in);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
+        if (!inputFile.isFile()) {
+            System.out.println("Error: Specified input path is not a file.");
+            return;
+        }
+
+        try (Scanner fileScanner = new Scanner(inputFile);
+             FileWriter writer = new FileWriter(outputFile)) {
+
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine();
                 writer.write(line + System.lineSeparator());
             }
-            System.out.println("Input written to " + fileName);
+            System.out.println("Content of " + inputFileName + " written to " + outputFileName);
         } catch (IOException e) {
-            System.out.println("Error writing to file: " + e.getMessage());
+            System.out.println("Error reading/writing files: " + e.getMessage());
         }
         return;
     }
 
-    // Otherwise, continue with regular file reading functionality
+    // Handle regular file reading
     if (commandArgs.length < 2) {
         System.out.println("Error: No filename provided.");
         return;
@@ -252,6 +263,7 @@ public static void cat(String[] commandArgs) {
         System.out.println("Error reading file: " + e.getMessage());
     }
 }
+
 
 
     public static void rmdir(String[] commandArgs) {

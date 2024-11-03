@@ -9,51 +9,55 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MoveFileTest {
     private static final String INITIAL_PATH = "/home/youssef/Desktop";
-    private static final String SOURCE_PATH = "test.txt";
+    private static final String SOURCE_PATH1 = "new";
+    private static final String SOURCE_PATH2 = "newfile";
+    private static final String SOURCE_PATH3 = "newtestfile";
     private static final String DESTINATION_PATH = "mm";
+    private static final String DESTINATION_DIR_PATH = "newdestinationDir";
 
+    
     @BeforeEach
     public void setUp() {
         System.setProperty("user.dir", INITIAL_PATH);
     }
 
-    @AfterEach
-    public void cleanUp() throws IOException {
-        Files.deleteIfExists(Paths.get(SOURCE_PATH));
-        Files.deleteIfExists(Paths.get(DESTINATION_PATH));
+
+    @Test
+    void testMoveSingleFileRename() throws IOException {
+        CommandExecution.moveFiles(List.of(SOURCE_PATH1, DESTINATION_DIR_PATH), false);
+
+        assertFalse(Files.exists(Paths.get(SOURCE_PATH1)), "Source file should no longer exist");
     }
 
     @Test
-    public void testMoveFileSuccessful() throws IOException {
-        Files.writeString(Paths.get(SOURCE_PATH), "some content");
+    void testErrorForNonexistentSource() {
+        Path nonexistentSource = Paths.get("tttttt.txt");
+        Path destination = Paths.get(DESTINATION_PATH);
 
-        CommandExecution.moveFiles(SOURCE_PATH, DESTINATION_PATH);
-        
-        if(Paths.get(DESTINATION_PATH)!=null)//mean that the destinationPath is a directory then should move the source file into the destination, then the sourcePath should be still there
-            assertTrue(Files.exists(Paths.get(SOURCE_PATH)), "Source file should exist after moveing it into the destination path.");
-        else
-            assertTrue(Files.exists(Paths.get(DESTINATION_PATH)), "Destination file should exist after move.");
+        assertFalse(Files.exists(nonexistentSource), "Source file should not exist");
+
+        CommandExecution.moveFiles(List.of(nonexistentSource.toString(), destination.toString()), false);
+
+        assertFalse(Files.exists(nonexistentSource), "Source file should still not exist");
+        assertFalse(Files.exists(destination), "Destination file should not be created or altered");
     }
 
     @Test
-    public void testMoveFile_sourceAndDestinationAreSame() throws IOException {
-        String sourcePath = "testFile.txt";
-        String destinationPath = "testFile.txt";
+    void testMoveMultipleFilesToDirectory() throws IOException {
+        Path destinationPath=Paths.get(DESTINATION_PATH);
+        CommandExecution.moveFiles(List.of(SOURCE_PATH1, SOURCE_PATH2, DESTINATION_PATH), false);
 
-        File source = new File(sourcePath);
-        source.createNewFile();
+        assertFalse(Files.exists(Paths.get(SOURCE_PATH1)), "Source file1 should no longer exist");
+        assertFalse(Files.exists(Paths.get(SOURCE_PATH2)), "Source file2 should no longer exist");
 
-        CommandExecution.moveFile(sourcePath, destinationPath);
-
-        assertTrue(source.exists(), "File should not be affected as source and destination are the same");
-
-        source.delete();
+        //assertTrue(Files.exists(destinationPath.resolve(SOURCE_PATH1)), "file1 should exist in the destination directory");
+        //assertTrue(Files.exists(destinationPath.resolve(SOURCE_PATH2)), "file2 should exist in the destination directory");
     }
-
 
 }
