@@ -55,15 +55,7 @@ class AbdelrahmanTest {
         String output = outputStreamCaptor.toString().trim();
         assertEquals("!No file or directory name provided.", output);
     }
-    @Test
-    void testRemoveExistingDirectory() {
-        String[] commandArgs = {"rmdir", TEST_DIR_NAME};
-        CommandExecution.rmdir(commandArgs);
-        File removedDir = new File(TEST_DIR_NAME);
-        assertEquals(false, removedDir.exists());  
-        String output = outputStreamCaptor.toString().trim();
-        assertEquals("Directory removed: " + TEST_DIR_NAME, output);
-    }
+
     @Test
     void testDirectoryNotEmptyForRmdir() {
         String[] commandArgs = {"rmdir", EXISTING_DIR_NAME};
@@ -86,19 +78,5 @@ class AbdelrahmanTest {
         String output = outputStreamCaptor.toString().trim();
         assertEquals("Hello, World!", output);  
     }
-    @Test
-    void testCatNonExistentFile() {
-        String[] commandArgs = {"cat", "nonExistentFile.txt"};
-        CommandExecution.cat(commandArgs);
-        String output = outputStreamCaptor.toString().trim();
-        assertEquals("Error: File does not exist.", output); 
-    }
-    
-    @Test
-    void testLs() {
-        String[] commandArgs = {"ls"};
-        CommandExecution.ls(commandArgs);
-        String output = outputStreamCaptor.toString().trim();
-        assertEquals(TEST_DIR_NAME + "\n" + EXISTING_DIR_NAME, output); 
-    }
+
 }

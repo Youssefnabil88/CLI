@@ -14,7 +14,7 @@ public class TestPipe {
     @BeforeEach
     public void setUp() {
         command = new CommandExecution();
-        System.setProperty("user.dir", "/home/youssef/Desktop/Courses/Test");
+        System.setProperty("user.dir", "/home/youssef/Desktop/Test");
     }
 
 

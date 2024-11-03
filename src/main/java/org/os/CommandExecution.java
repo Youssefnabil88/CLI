@@ -204,16 +204,19 @@ public class CommandExecution {
 }
                                     
     
+
+
 public static void cat(String[] commandArgs) {
-    // Check for redirecting output to a file
+    // Check for input redirection to a file
     if (commandArgs.length == 4 && ">".equals(commandArgs[2])) {
         String inputFileName = commandArgs[1]; // The file to read from
         String outputFileName = commandArgs[3]; // The file to write to
         File inputFile = new File(System.getProperty("user.dir"), inputFileName);
         File outputFile = new File(System.getProperty("user.dir"), outputFileName);
 
+        // Check if the input file exists
         if (!inputFile.exists()) {
-            System.out.println("Error: Input file does not exist.");
+            System.out.println("Error: Input file does not exist: " + inputFile.getAbsolutePath());
             return;
         }
 
@@ -225,6 +228,12 @@ public static void cat(String[] commandArgs) {
         try (Scanner fileScanner = new Scanner(inputFile);
              FileWriter writer = new FileWriter(outputFile)) {
 
+            // Create the output file if it does not exist
+            if (!outputFile.exists()) {
+                outputFile.createNewFile();
+            }
+
+            // Write content from the input file to the output file
             while (fileScanner.hasNextLine()) {
                 String line = fileScanner.nextLine();
                 writer.write(line + System.lineSeparator());
@@ -232,6 +241,24 @@ public static void cat(String[] commandArgs) {
             System.out.println("Content of " + inputFileName + " written to " + outputFileName);
         } catch (IOException e) {
             System.out.println("Error reading/writing files: " + e.getMessage());
+        }
+        return;
+    }
+
+    // Handle writing user input to a file (if applicable)
+    if (commandArgs.length == 3 && ">".equals(commandArgs[1])) {
+        String fileName = commandArgs[2];
+        File file = new File(System.getProperty("user.dir"), fileName);
+        try (FileWriter writer = new FileWriter(file)) {
+            System.out.println("Enter text (press Ctrl+D to end):");
+            Scanner scanner = new Scanner(System.in);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                writer.write(line + System.lineSeparator());
+            }
+            System.out.println("Input written to " + fileName);
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
         }
         return;
     }
@@ -246,7 +273,7 @@ public static void cat(String[] commandArgs) {
     File file = new File(System.getProperty("user.dir"), filename);
 
     if (!file.exists()) {
-        System.out.println("Error: File does not exist.");
+        System.out.println("Error: File does not exist: " + file.getAbsolutePath());
         return;
     }
 
@@ -263,8 +290,6 @@ public static void cat(String[] commandArgs) {
         System.out.println("Error reading file: " + e.getMessage());
     }
 }
-
-
 
     public static void rmdir(String[] commandArgs) {
         if (commandArgs.length < 2) {

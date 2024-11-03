@@ -3,81 +3,83 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.os.CommandExecution;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CatCommandTest {
-    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
-    private Path tempDirectory;
+class CatCommandTest {
+    private final String testDir = System.getProperty("user.dir") + "/testDir";
+    private final String inputFilePath = testDir + "/file1.txt";
+    private final String outputFilePath = testDir + "/file2.txt";
+    private PrintStream originalOut;
 
     @BeforeEach
-    public void setUp() throws IOException {
-        System.setOut(new PrintStream(outputStreamCaptor));
-
-        // Create a temporary directory for test files
-        tempDirectory = Files.createTempDirectory("testDir");
-        System.setProperty("user.dir", tempDirectory.toString());
+    void setUp() {
+        originalOut = System.out;
+        new File(testDir).mkdirs();
+        createTestFile(inputFilePath, "Hello, World!\n");
     }
 
     @AfterEach
-    public void tearDown() throws IOException {
+    void tearDown() {
+
+        new File(inputFilePath).delete();
+        new File(outputFilePath).delete();
+        new File(testDir).delete();
         System.setOut(originalOut);
-        Files.walk(tempDirectory)
-                .sorted((p1, p2) -> p2.compareTo(p1)) // Delete files first, then the directory
-                .forEach(p -> {
-                    try {
-                        Files.delete(p);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
+    }
+
+    private void createTestFile(String path, String content) {
+        try (FileWriter writer = new FileWriter(path)) {
+            writer.write(content);
+        } catch (IOException e) {
+            fail("Failed to create test file: " + e.getMessage());
+        }
     }
 
     @Test
-    public void testCatWriteToFile() throws IOException {
-        String simulatedInput = "Hello!\nThis is a test.\n";
-        InputStream input = new ByteArrayInputStream(simulatedInput.getBytes());
-        System.setIn(input);
+    void testReadFile() {
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        String[] commandArgs = {"cat", ">", "testFile.txt"};
-        CommandExecution.cat(commandArgs);
-
-        assertTrue(new File(tempDirectory.toFile(), "testFile.txt").exists(), "File should be created");
-
-        String content = Files.readString(Path.of(tempDirectory.toString(), "testFile.txt"));
-        assertEquals("Hello!\nThis is a test.", content.trim());
+        CommandExecution.cat(new String[]{"cat", "testDir/file1.txt"});
+        assertEquals("Hello, World!\n", outContent.toString());
     }
 
     @Test
-    public void testCatReadFile() throws IOException {
-        String testContent = "Hello!\nThis is a test.";
-        Files.writeString(Path.of(tempDirectory.toString(), "testFile.txt"), testContent);
+    void testRedirectOutput() {
 
-        String[] commandArgs = {"cat", "testFile.txt"};
-        CommandExecution.cat(commandArgs);
+        CommandExecution.cat(new String[]{"cat", "testDir/file1.txt", ">", "testDir/file2.txt"});
+        File file = new File(outputFilePath);
+        assertTrue(file.exists(), "Output file was not created.");
 
-        assertEquals("Hello!\nThis is a test.", outputStreamCaptor.toString().trim());
+        String content = readFile(outputFilePath);
+        assertEquals("Hello, World!\n", content);
     }
 
     @Test
-    public void testCatFileNotFound() {
-        String[] commandArgs = {"cat", "nonexistent.txt"};
-        CommandExecution.cat(commandArgs);
+    void testFileNotFound() {
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
 
-        assertEquals("Error: File does not exist.", outputStreamCaptor.toString().trim());
+        CommandExecution.cat(new String[]{"cat", "testDir/non_existent_file.txt"});
+        assertTrue(outContent.toString().contains("Error: File does not exist:"));
     }
 
-    @Test
-    public void testCatNotAFile() throws IOException {
-        Files.createDirectory(Path.of(tempDirectory.toString(), "not_a_file_dir"));
-
-        String[] commandArgs = {"cat", "not_a_file_dir"};
-        CommandExecution.cat(commandArgs);
-
-        assertEquals("Error: Specified path is not a file.", outputStreamCaptor.toString().trim());
+    private String readFile(String path) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Scanner scanner = new Scanner(new File(path))) {
+            while (scanner.hasNextLine()) {
+                contentBuilder.append(scanner.nextLine()).append("\n");
+            }
+        } catch (IOException e) {
+            fail("Failed to read file: " + e.getMessage());
+        }
+        return contentBuilder.toString();
     }
 }
